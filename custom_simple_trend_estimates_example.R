@@ -90,8 +90,7 @@ if(length(ws) == 0){
 
 trends <- trends %>% filter(Region_alt %in% regions_keep)
 
-save(list = c("full_out","BETA_nat"),
-     file = "c:/Senescence/data/full_database_hyperparameter_trends_All_Species.RData")
-#write.csv(trends,paste("output/trends",Sys.Date(),".csv"))
+
+write.csv(trends,paste("output/trends",Sys.Date(),".csv"))
 
 
