@@ -1,0 +1,117 @@
+## March 2, 2021
+## Ann's attempted script for custom strata, species and years for WBF species
+## modifying from github Ontario example (https://github.com/AdamCSmithCWS/Custom_BBS_Trends/blob/main/project_specific_applications/custom_simple_trend_estimates.R) to include WBF species and BCR-province strata of interest
+
+
+library(tidyverse)
+library(bbsBayes)
+
+
+species_times <- read.csv("inputLists/WBF_species_lists.csv")	## AM: modified from Ontario example - I created two species columns for the same list of species, one to generate 2009-2019 trends, one for 1970-2019
+
+# start and end years (matching)
+Y_start = c(2009,1970)			## AM: modified from Ontario example - I'm assuming this will then calculate 2 trends, one 2009-2019, one 1970-2019, for columns 1 and 2 of the .csv file
+Y_end = c(2019,2019)
+
+
+
+### AM: I don't think these 2 lines are required, because instead we're using the st_comp_regions to create province-BCR regions
+
+region_types = c("national")
+
+#regions_keep = c("Ontario","Canada")
+
+
+stored_files = "C:/BBS_Summaries/output/" #modify to identify folder that holds species specific output folders
+
+
+### AM: creating the custom regions
+
+st_comp_regions <- get_composite_regions(strata_type = "bbs_cws")
+
+
+## AM: I don't know entirely what these allspecies lines are doing but I assume it has something to do with fixing up species names to the correct format in the first part of the loop, so I assume we do need these lines...
+
+strat_data = stratify(by = "bbs_cws")
+
+allspecies.eng = strat_data$species_strat$english
+allspecies.fre = strat_data$species_strat$french
+allspecies.num = strat_data$species_strat$sp.bbs
+
+allspecies.file = str_replace_all(str_replace_all(allspecies.eng,"[:punct:]",replacement = ""),
+                                  "\\s",replacement = "_")
+
+
+
+## AM: option 1 - include all BCR 7; this is what's used in the trend analysis below but we'll want to repeat with option 2 as well
+st_comp_regions$WBF7 <- ifelse(st_comp_regions$region %in% c("CA-AB-6","CA-AB-8","CA-BC-6","CA-BC-4","CA-SK-6","CA-SK-8","CA-MB-6","CA-MB-8","CA-YT-4","CA-YT-6","CA-NT-4","CA-NT-6","CA-BCR7-7"),"WBF7","Other")
+
+## AM: option 2 - don't include any of BCR 7
+st_comp_regions$WBFno7 <- ifelse(st_comp_regions$region %in% c("CA-AB-6","CA-AB-8","CA-BC-6","CA-BC-4","CA-SK-6","CA-SK-8","CA-MB-6","CA-MB-8","CA-YT-4","CA-YT-6","CA-NT-4","CA-NT-6"),"WBFno7","Otherno7")
+
+trends = NULL
+species = species_times[,1]
+
+
+for(reg_header in c("WBF7","WBFno7")){
+  
+  
+for(sp in species){
+  if(sp == ""){next}
+  if(sp == "Gray Jay"){sp <- "Canada Jay"}
+  ws = which(allspecies.eng == sp)
+  if(length(ws) == 0){
+    sp_fl_2 = str_replace_all(str_replace_all(sp,"[:punct:]",replacement = ""),
+                              "\\s",replacement = "_")
+    
+    ws = which(allspecies.file == sp_fl_2)
+    
+    if(length(ws) == 0){
+      sp_fl_2 = paste0(sp_fl_2,"_all_forms") 
+      ws = which(allspecies.file == sp_fl_2)
+      
+    }
+  }
+  if(length(ws) == 0){    stop("ERROR species name not recognized")}
+  
+  sp_fl = allspecies.file[ws] 
+  spo = allspecies.eng[ws]
+  
+  if(file.exists(paste0(stored_files,sp_fl,"/jags_mod_full.RData"))){
+    load(paste0(stored_files,sp_fl,"/jags_mod_full.RData"))
+    
+for(j in 1:length(Y_start)){
+  
+  y1 = Y_start[j]
+  y2 = Y_end[j]
+  
+     
+    inds = generate_indices(jags_mod = jags_mod,
+                     jags_data = jags_data,
+                     #regions = region_types,			## AM: here I've replaced the regions line with the custom regions
+				alt_region_names = st_comp_regions,	
+                        regions = reg_header,				## AM: repeat with regions = "WBFno7" in a separate run; or is it possible to use regions = c("WBF7","WBFno7") and their results would show up in separate columns?
+                     quantiles = c(0.025,0.5,0.975),
+                     alternate_n = "n3",
+                     startyear = y1)
+    
+    trs = generate_trends(indices = inds,
+                          quantiles = c(0.025,0.5,0.975),
+                          Min_year = y1,
+                          Max_year = y2)
+    trs$species <- spo
+    
+    trends = bind_rows(trends,trs)
+    
+  }
+  
+  }
+}
+
+}#end of reg_header loop
+
+#trends <- trends %>% filter(Region_alt %in% regions_keep)	## AM: I don't think we need this line since we've already specified the regions..?
+
+
+
+write.csv(trends,paste("output/trends",Sys.Date(),".csv"))
