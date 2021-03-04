@@ -153,7 +153,8 @@ trends_out <- trends %>%
                      Number_of_strata,
                      Width_of_95_percent_Credible_Interval,
                      Number_of_Routes,
-                     Mean_Number_of_Routes) #adding a more useful column order for the sake of simplicity.
+                     Mean_Number_of_Routes) %>% 
+  arrange(species,Region_type,Region,Start_year)  #adding a more useful column order for the sake of simplicity.
 
 
 write.csv(trends_out,paste("output/trends",Sys.Date(),".csv"))
