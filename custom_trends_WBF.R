@@ -112,6 +112,48 @@ for(j in 1:length(Y_start)){
 
 #trends <- trends %>% filter(Region_alt %in% regions_keep)	## AM: I don't think we need this line since we've already specified the regions..?
 
+# reliability category cut-off definitions ----------------------------------------
+
+prec_cuts = c(abs(2*((0.7^(1/20))-1)),
+              abs(2*((0.5^(1/20))-1)))*100 
+names(prec_cuts) <- c("High","Medium")
+
+## no coverage possible because calculating coverage for these custom regions is not currently possible
+# cov_cuts = c(0.5,0.25)
+# names(cov_cuts) <- c("High","Medium")
+
+## not relevant with this model
+# pool_cuts = c(0.33,0.1)
+# names(pool_cuts) <- c("High","Medium")
+
+backcast_cuts = c(0.90,0.75)
+names(backcast_cuts) <- c("High","Medium")
+
+source("Functions/reliability.R")
+
+trends_out <- trends %>% 
+  mutate(precision_reliability = reliab_func_prec(Width_of_95_percent_Credible_Interval),
+         local_data_reliability = reliab_func_backcast(backcast_flag)) %>% 
+  rowwise() %>% 
+  mutate(overall_reliability_without_coverage = min(precision_reliability,local_data_reliability)) %>%  #add the reliability information.
+  select(species,Start_year,End_year,Region,Region_type,
+                     Trend,
+                     Trend_Q0.025,
+                     Trend_Q0.5,
+                     Trend_Q0.975,
+                     Percent_Change,
+                     Percent_Change_Q0.025,
+                     Percent_Change_Q0.5,
+                     Percent_Change_Q0.975,
+         precision_reliability,
+         local_data_reliability,
+         overall_reliability_without_coverage,
+                     Relative_Abundance,
+                     Observed_Relative_Abundance,
+                     Number_of_strata,
+                     Width_of_95_percent_Credible_Interval,
+                     Number_of_Routes,
+                     Mean_Number_of_Routes) #adding a more useful column order for the sake of simplicity.
 
 
-write.csv(trends,paste("output/trends",Sys.Date(),".csv"))
+write.csv(trends_out,paste("output/trends",Sys.Date(),".csv"))
