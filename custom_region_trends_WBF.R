@@ -1,7 +1,8 @@
 ## March 2, 2021
-## Ann's attempted script for custom strata, species and years for WBF species
-## modifying from github Ontario example (https://github.com/AdamCSmithCWS/Custom_BBS_Trends/blob/main/project_specific_applications/custom_simple_trend_estimates.R) to include WBF species and BCR-province strata of interest
-
+## Script to calculate Western Canada trends for all species from the BBS
+## calculates to time periods
+## uses two different definitions of custom regions
+## also adds reliability calculations
 
 library(tidyverse)
 library(bbsBayes)
@@ -15,9 +16,9 @@ Y_end = c(2019,2019)
 
 
 
-### AM: I don't think these 2 lines are required, because instead we're using the st_comp_regions to create province-BCR regions
+### these can be used to select out certain regions or types of regions
 
-region_types = c("national")
+#region_types = c("national")
 
 #regions_keep = c("Ontario","Canada")
 
@@ -25,13 +26,8 @@ region_types = c("national")
 stored_files = "C:/BBS_Summaries/output/" #modify to identify folder that holds species specific output folders
 
 
-### AM: creating the custom regions
 
-st_comp_regions <- get_composite_regions(strata_type = "bbs_cws")
-
-
-## AM: I don't know entirely what these allspecies lines are doing but I assume it has something to do with fixing up species names to the correct format in the first part of the loop, so I assume we do need these lines...
-
+## Lines to manage species name from the BBS database, english, French and file-name versions that have special characters removed
 strat_data = stratify(by = "bbs_cws")
 
 allspecies.eng = strat_data$species_strat$english
@@ -42,6 +38,10 @@ allspecies.file = str_replace_all(str_replace_all(allspecies.eng,"[:punct:]",rep
                                   "\\s",replacement = "_")
 
 
+
+### AM: creating the custom regions
+
+st_comp_regions <- get_composite_regions(strata_type = "bbs_cws")
 
 ## AM: option 1 - include all BCR 7; this is what's used in the trend analysis below but we'll want to repeat with option 2 as well
 st_comp_regions$WBF7 <- ifelse(st_comp_regions$region %in% c("CA-AB-6","CA-AB-8","CA-BC-6","CA-BC-4","CA-SK-6","CA-SK-8","CA-MB-6","CA-MB-8","CA-YT-4","CA-YT-6","CA-NT-4","CA-NT-6","CA-BCR7-7"),"WBF7","Other")
@@ -88,9 +88,8 @@ for(j in 1:length(Y_start)){
      
     inds = generate_indices(jags_mod = jags_mod,
                      jags_data = jags_data,
-                     #regions = region_types,			## AM: here I've replaced the regions line with the custom regions
 				alt_region_names = st_comp_regions,	
-                        regions = reg_header,				## AM: repeat with regions = "WBFno7" in a separate run; or is it possible to use regions = c("WBF7","WBFno7") and their results would show up in separate columns?
+                        regions = reg_header,				
                      quantiles = c(0.025,0.5,0.975),
                      alternate_n = "n3",
                      startyear = y1)
@@ -110,7 +109,7 @@ for(j in 1:length(Y_start)){
 
 }#end of reg_header loop
 
-#trends <- trends %>% filter(Region_alt %in% regions_keep)	## AM: I don't think we need this line since we've already specified the regions..?
+
 
 # reliability category cut-off definitions ----------------------------------------
 
@@ -154,7 +153,7 @@ trends_out <- trends %>%
                      Width_of_95_percent_Credible_Interval,
                      Number_of_Routes,
                      Mean_Number_of_Routes) %>% 
-  arrange(species,Region_type,Region,Start_year)  #adding a more useful column order for the sake of simplicity.
+  arrange(species,Region_type,Region,Start_year)  #adding a more useful column order for the sake of clarity
 
 
 write.csv(trends_out,paste("output/trends",Sys.Date(),".csv"))
