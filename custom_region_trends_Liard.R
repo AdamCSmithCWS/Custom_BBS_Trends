@@ -8,11 +8,12 @@ library(tidyverse)
 library(bbsBayes)
 
 
-species_times <- read.csv("inputLists/WBF_species_lists.csv")	## AM: modified from Ontario example - I created two species columns for the same list of species, one to generate 2009-2019 trends, one for 1970-2019
+species_times <- read.csv("inputLists/Liard_species_list.csv")	## AM: modified from Ontario example - I created two species columns for the same list of species, one to generate 2009-2019 trends, one for 1970-2019
+
 
 # start and end years (matching)
-Y_start = c(2009,1970)			## AM: modified from Ontario example - I'm assuming this will then calculate 2 trends, one 2009-2019, one 1970-2019, for columns 1 and 2 of the .csv file
-Y_end = c(2019,2019)
+Y_start = c(1998)			## AM: modified from Ontario example - I'm assuming this will then calculate 2 trends, one 2009-2019, one 1970-2019, for columns 1 and 2 of the .csv file
+Y_end = c(2017)
 
 
 
@@ -43,18 +44,15 @@ allspecies.file = str_replace_all(str_replace_all(allspecies.eng,"[:punct:]",rep
 
 st_comp_regions <- get_composite_regions(strata_type = "bbs_cws")
 
-## AM: option 1 - include all BCR 7; this is what's used in the trend analysis below but we'll want to repeat with option 2 as well
-st_comp_regions$WBF7 <- ifelse(st_comp_regions$region %in% c("CA-AB-6","CA-AB-8","CA-BC-6","CA-BC-4","CA-SK-6","CA-SK-8","CA-MB-6","CA-MB-8","CA-YT-4","CA-YT-6","CA-NT-4","CA-NT-6","CA-BCR7-7"),"WBF7","Other")
+##  
+st_comp_regions$Liard <- ifelse(st_comp_regions$region %in% c("CA-AB-6","CA-NT-6"),"Liard","Other")
 
-## AM: option 2 - don't include any of BCR 7
-st_comp_regions$WBFno7 <- ifelse(st_comp_regions$region %in% c("CA-AB-6","CA-AB-8","CA-BC-6","CA-BC-4","CA-SK-6","CA-SK-8","CA-MB-6","CA-MB-8","CA-YT-4","CA-YT-6","CA-NT-4","CA-NT-6"),"WBFno7","Otherno7")
 
 trends = NULL
 species = species_times[,1]
 
 
-for(reg_header in c("WBF7","WBFno7")){
-  
+ 
   
 for(sp in species){
   if(sp == ""){next}
@@ -89,7 +87,7 @@ for(j in 1:length(Y_start)){
     inds = generate_indices(jags_mod = jags_mod,
                      jags_data = jags_data,
 				alt_region_names = st_comp_regions,	
-                        regions = reg_header,				
+                        regions = "Liard",				
                      quantiles = c(0.025,0.5,0.975),
                      alternate_n = "n3",
                      startyear = y1)
@@ -106,8 +104,6 @@ for(j in 1:length(Y_start)){
   
   }
 }
-
-}#end of reg_header loop
 
 
 
