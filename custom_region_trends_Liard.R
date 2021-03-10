@@ -134,11 +134,11 @@ trends_out <- trends %>%
   select(species,Start_year,End_year,Region,Region_type,
                      Trend,
                      Trend_Q0.025,
-                     Trend_Q0.5,
+                     #Trend_Q0.5,
                      Trend_Q0.975,
                      Percent_Change,
                      Percent_Change_Q0.025,
-                     Percent_Change_Q0.5,
+                     #Percent_Change_Q0.5,
                      Percent_Change_Q0.975,
          precision_reliability,
          local_data_reliability,
@@ -151,5 +151,5 @@ trends_out <- trends %>%
                      Mean_Number_of_Routes) %>% 
   arrange(species,Region_type,Region,Start_year)  #adding a more useful column order for the sake of clarity
 
-
-write.csv(trends_out,paste("output/trends",Sys.Date(),".csv"))
+trends_out <- filter(trends_out,Region == "Liard")
+write.csv(trends_out,paste("output/trends",Sys.Date(),".csv"), row.names = FALSE)
