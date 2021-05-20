@@ -143,29 +143,25 @@ sp = species_inc
   }
   
   tr_comp_wide <- tr_comp_wide %>% 
-    mutate(dif_trend = tr2-tr1,
-           dif_percent_change = pch2-pch1)
+    mutate(dif_trend = tr2-tr1)
   
   diff_summary = tr_comp_wide %>%
     ungroup() %>% 
-    summarise(trend_97_07 = mean(tr1),
+    summarise(trend_97_07 = median(tr1),
               trend_97_07_lci = quantile(tr1,0.025),
               trend_97_07_uci = quantile(tr1,0.975),
-              trend_09_19 = mean(tr2),
+              trend_09_19 = median(tr2),
               trend_09_19_lci = quantile(tr2,0.025),
               trend_09_19_uci = quantile(tr2,0.975),
-              pch_97_07 = mean(pch1),
+              pch_97_07 = median(pch1),
               pch_97_07_lci = quantile(pch1,0.025),
               pch_97_07_uci = quantile(pch1,0.975),
-              pch_09_19 = mean(pch2),
+              pch_09_19 = median(pch2),
               pch_09_19_lci = quantile(pch2,0.025),
               pch_09_19_uci = quantile(pch2,0.975),
-              difference_trend = mean(dif_trend),
+              difference_trend = median(dif_trend),
               dif_trend_lci = quantile(dif_trend,0.025),
-              dif_trend_uci = quantile(dif_trend,0.975),
-              difference_percent_change = mean(dif_percent_change),
-              dif_percent_change_lci = quantile(dif_percent_change,0.025),
-              dif_percent_change_uci = quantile(dif_percent_change,0.975))
+              dif_trend_uci = quantile(dif_trend,0.975))
   
   write.csv(diff_summary,paste0("output/",sp_fl,"trends_and_differences_in_trends.csv"))
   
