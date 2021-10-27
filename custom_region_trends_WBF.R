@@ -8,7 +8,7 @@ library(tidyverse)
 library(bbsBayes)
 
 
-species_times <- read.csv("inputLists/WBF_species_lists.csv")	## AM: modified from Ontario example - I created two species columns for the same list of species, one to generate 2009-2019 trends, one for 1970-2019
+species_times <- read.csv("inputLists/WBF_species_lists_V2.csv")	## AM: modified from Ontario example - I created two species columns for the same list of species, one to generate 2009-2019 trends, one for 1970-2019
 
 # start and end years (matching)
 Y_start = c(2009,1970)			## AM: modified from Ontario example - I'm assuming this will then calculate 2 trends, one 2009-2019, one 1970-2019, for columns 1 and 2 of the .csv file
@@ -23,7 +23,7 @@ Y_end = c(2019,2019)
 #regions_keep = c("Ontario","Canada")
 
 
-stored_files = "C:/BBS_Summaries/output/" #modify to identify folder that holds species specific output folders
+stored_files = "D:/BBS_Summaries/output/" #modify to identify folder that holds species specific output folders
 
 
 
