@@ -17,7 +17,7 @@ region_types = c("national","stratum", "prov_state") #types of regions to calcul
 custom_region <- c("CA-ON-13","CA-ON-12","CA-QC-13",
                    "CA-QC-12","US-PA-13","US-NY-13",
                    "US-OH-13","US-VT-13") #ON-13 plus all neighbouring regions
-regions_keep = c("Canada", "Ontario",custom_region)
+regions_keep = c("Canada", "Ontario",custom_region[1],"ON_13_and_Neighbours")
       # selection of specific regions of the region_types above
 
 
@@ -50,6 +50,7 @@ y1 = Y_start
 y2 = Y_end
 
 trends = NULL
+
 for(sp in species_inc){
   
 
@@ -86,14 +87,17 @@ if(length(ws) == 0){
                      alternate_n = "n3",
                      startyear = y1)
     
+    for(y1t in c(Y_start,Y_end-10)){
+      
     trs = generate_trends(indices = inds,
                           quantiles = c(0.025,0.5,0.975),
-                          Min_year = y1,
+                          Min_year = y1t,
                           Max_year = y2)
     trs$species <- spo # adds species name to file
-    
-    
     trends = bind_rows(trends,trs)
+    
+    }
+    
     
     inds = generate_indices(jags_mod = jags_mod,
                             jags_data = jags_data,
@@ -103,15 +107,17 @@ if(length(ws) == 0){
                             alternate_n = "n3",
                             startyear = y1)
     
-    
+    for(y1t in c(Y_start,Y_end-10)){
+      
     trs = generate_trends(indices = inds,
                           quantiles = c(0.025,0.5,0.975),
-                          Min_year = y1,
+                          Min_year = y1t,
                           Max_year = y2)
     trs$species <- spo # adds species name to file
     
     
     trends = bind_rows(trends,trs)
+    }
     
     # similar thing could be done to save annual indices
     
@@ -121,9 +127,28 @@ if(length(ws) == 0){
 
 
 
-trends <- trends %>% filter(Region_alt %in% regions_keep)
+trends2 <- trends %>% filter(Region_alt %in% regions_keep)
 
 
-write.csv(trends,paste("output/trends",Sys.Date(),".csv"))
+write.csv(trends2,paste("output/trends",Sys.Date(),".csv"))
+
+
+
+trends3 = trends2 %>% filter(Start_year == 1970,
+                             Region_type %in% c("stratum","custom_region"))
+
+
+CI_comp = ggplot(data = trends3,aes(x = species,y = Width_of_95_percent_Credible_Interval))+
+  geom_point(aes(colour = Region))+
+  coord_flip()
+print(CI_comp)
+
+T_comp = ggplot(data = trends3,aes(x = species,y = Trend))+
+  geom_errorbar(aes(ymin = Trend_Q0.025,ymax = Trend_Q0.975,colour = Region),width = 0,
+                position = position_dodge(width = 0.25))+
+  geom_point(aes(colour = Region),
+             position = position_dodge(width = 0.25))+
+  coord_flip()
+print(T_comp)
 
 
