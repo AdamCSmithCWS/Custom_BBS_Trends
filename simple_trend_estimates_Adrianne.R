@@ -140,7 +140,12 @@ trends3 = trends2 %>% filter(Start_year == 1970,
 
 CI_comp = ggplot(data = trends3,aes(x = species,y = Width_of_95_percent_Credible_Interval))+
   geom_point(aes(colour = Region))+
+  labs(title = "Width of the credible intervals of 1970-2019 trends",
+       subtitle = "Trends with neighbouring strata are more precise")+
   coord_flip()
+pdf("precision and trend comparison.pdf",
+    width = 7,
+    height = 11.5)
 print(CI_comp)
 
 T_comp = ggplot(data = trends3,aes(x = species,y = Trend))+
@@ -148,7 +153,9 @@ T_comp = ggplot(data = trends3,aes(x = species,y = Trend))+
                 position = position_dodge(width = 0.25))+
   geom_point(aes(colour = Region),
              position = position_dodge(width = 0.25))+
+  labs(title = "Trend estimates with 95% CI, 1970-2019",
+       subtitle = "Trends with neighbouring strata are generally similar to trends from ON-13")+
   coord_flip()
 print(T_comp)
 
-
+dev.off()
